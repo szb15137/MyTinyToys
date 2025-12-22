@@ -1,13 +1,13 @@
 #include "mmpool.h"
 
-MyMmPool::MyMmPool(int num, int size = 4096) : block_num(num), free_list(nullptr) {
+MyMmPool::MyMmPool(int num, int size) : block_num(num), free_list(nullptr) {
     pool_size = size > sizeof(void*) ? size : sizeof(void*);
     pool_size = align_size(pool_size, sizeof(void*));
     expand();
 }
 MyMmPool::~MyMmPool() {
     for (char* pool : mm_pool_list){
-        ::operator delete(pool); // Any potential memory leakage? 
+        ::operator delete(pool);
     }
 }
 

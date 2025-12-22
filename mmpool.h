@@ -8,7 +8,7 @@ struct PoolNode
 class MyMmPool
 {
 public:
-    explicit MyMmPool(int num, int size) {};
+    explicit MyMmPool(int num, int size = 4096);
     ~MyMmPool();
     MyMmPool(const MyMmPool &other) = delete;
     MyMmPool(MyMmPool &&other) = delete;
@@ -18,8 +18,7 @@ public:
     void deallocate(void* ptr);
 
 private:
-    static inline int align_size(int size, int alignment) {};
-    // void* split(void* ptr);
+    static inline int align_size(int size, int alignment);
     void expand();
 
 private:
