@@ -4,6 +4,9 @@
 #include <mutex>
 #include <functional>
 #include <queue>
+#include <future>
+#include <type_traits>
+#include <stdexcept>
 
 class Mythreadpool
 {
@@ -24,17 +27,23 @@ public:
 
     // TODO: Update the class so that result can be returned from the thread
     template <class F, class... Args>
-    void enqueue(F&& f, Args&&... args);
+    auto enqueue(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>;
 };
 
 template <class F, class... Args>
-void Mythreadpool::enqueue(F&& f, Args&&... args){
+auto Mythreadpool::enqueue(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type> {
+    // typedef typename std::result_of<F(Args...)>::type return_type;
+    using return_type = typename std::result_of<F(Args...)>::type;
+    auto task = std::make_shared<std::packaged_task<return_type()>>(
+        std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+    std::future<return_type> res = task->get_future();
     {
         std::unique_lock<std::mutex> lock(mtx);
         if (stop){
-            return;
+            throw std::runtime_error("Enqueue on stopped thread pool");
         }
-        tasks.emplace(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+        tasks.emplace([task](){(*task)();});
     }
     cv.notify_one();
+    return res;
 }

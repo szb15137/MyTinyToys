@@ -12,16 +12,15 @@ Mythreadpool::Mythreadpool(int num_threads)
             while (true){
                 std::function<void()> task;
                 {
-                    std::unique_lock<std::mutex> lock(mtx);
-                    cv.wait(lock, [this]{
-                        return stop || !tasks.empty(); 
+                    std::unique_lock<std::mutex> lock(this->mtx);
+                    this->cv.wait(lock, [this]{
+                        return stop || !this->tasks.empty(); 
                     });
-                    if (stop && tasks.empty()){
+                    if (stop && this->tasks.empty()){
                         return;
                     }
-                    task = tasks.front();
-                    tasks.pop();
-                    // lock.unlock();
+                    task = this->tasks.front();
+                    this->tasks.pop();
                 }
                 task();
             }
